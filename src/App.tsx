@@ -21,7 +21,7 @@ function App() {
   }
 
   useEffect(() => {
-    openAi()
+    // openAi()
   }, [])
 
   return (

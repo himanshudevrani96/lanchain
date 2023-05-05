@@ -5,14 +5,13 @@ import { PromptTemplate, LLMChain } from "langchain";
 import { API_KEY } from "./apikey";
 
 export const useIdea = () => {
-
-  const titleTemplate =
+  const topicTemplate =
     "What are the absolute coolest, most mind-blowing, out of the box, ChatGPt prompts that will really show of the power of ChatGPT? Give me 5 ideas about {topic}"
   const scopeTemplate = "Create a scope of work for this idea Idea: {title}"
 
-  const title_template = new PromptTemplate({
-    template: titleTemplate,
-    inputVariables: ["product"],
+  const topic_template = new PromptTemplate({
+    template: topicTemplate,
+    inputVariables: ["topic"],
   })
 
   const scope_template = new PromptTemplate({
@@ -22,17 +21,18 @@ export const useIdea = () => {
 
   const model = new OpenAI({ openAIApiKey: API_KEY, temperature: 0.9 });
   //seting up llm chains
-  const chainForTitle = new LLMChain({ llm: model, prompt: title_template });
+  const chainForTitle = new LLMChain({ llm: model, prompt: topic_template });
   const chainForScope = new LLMChain({ llm: model, prompt: scope_template });
-
+  console.log();
+  
   // Getting response
   const getTitleResponse = async (title: string) => {
     try {
       const reschainForTitle = await chainForTitle.call({
-        product: title,
+        topic: title,
       });
       console.log({reschainForTitle});
-      return "rsponse"
+      return reschainForTitle?.text
       
     } catch (err) {
         console.error(err);
@@ -43,10 +43,10 @@ export const useIdea = () => {
   const getScopeResponse = async (scope: string) => {
     try {
       const reschainForScope = await chainForScope.call({
-        product: scope,
+        title: scope,
       });
       console.log({reschainForScope});
-      return "rsponse"
+      return reschainForScope?.text
       
     } catch (err) {
         console.error(err);
