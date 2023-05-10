@@ -1,7 +1,7 @@
 // Bring in dependencies
-
 import { OpenAI } from "langchain"; // gives us the OpenAI service to leverage a large language model
-import { PromptTemplate, LLMChain } from "langchain";
+import { PromptTemplate } from "langchain";
+import { LLMChain, SequentialChain } from 'langchain/chains';
 import { API_KEY } from "./apikey";
 
 export const useIdea = () => {
@@ -19,7 +19,7 @@ export const useIdea = () => {
     inputVariables: ["title"],
   })
 
-  const model = new OpenAI({ openAIApiKey: API_KEY, temperature: 0.9 });
+  const model = new OpenAI({ openAIApiKey: API_KEY, temperature: 0.9, });
   //seting up llm chains
   const chainForTitle = new LLMChain({ llm: model, prompt: topic_template });
   const chainForScope = new LLMChain({ llm: model, prompt: scope_template });
@@ -53,6 +53,25 @@ export const useIdea = () => {
         return ""
     }
   };
+  const sequentialChain = new SequentialChain({
+    chains: [chainForTitle, chainForScope],
+    inputVariables: ['topic'],
+    outputVariables: ['title', 'topic'],
+    verbose: true
+  });
+
+  // const getSequentialResponse = async ()=>{
+  //   try{
+  //   const resp =  await sequentialChain({ topic: prompt })
+     
+      
+  //   }catch(err){
+  //     console.error(err);
+      
+  //   }
+  // }
+
+
 
   //   const sequential_chain = new SequentialChain({
   //     chains: [title_chain, scope_chain],
