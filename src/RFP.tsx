@@ -111,8 +111,8 @@ const RfpForm = () => {
   });
 
   const requirementsTemplate = new PromptTemplate({
-    inputVariables: ["title"],
-    template: "Create a requirements for this idea: {title}",
+    inputVariables: ["scope"],
+    template: "Create a requirements for: {scope}",
   });
 
   // Create llm chains
@@ -136,31 +136,31 @@ const RfpForm = () => {
 
   // Create sequential chain
   const sequentialChain = new SequentialChain({
-    chains: [titleChain, scopeChain],
+    chains: [titleChain, scopeChain, requirementsChain],
     inputVariables: ["topic"],
-    outputVariables: ["title", "scope"],
+    outputVariables: ["title", "scope", "requirements"],
   });
 
   // Handle form submission
-  const handleSubmit = async(e: any) => {
+  const handleSubmit = async (e: any) => {
     try {
       if (!prompt) {
-        setError("Please enter a prompt")
-        return
+        setError("Please enter a prompt");
+        return;
       }
       // const response = await sequentialChain.call({ topic: prompt })
       // console.log({ response })
       // setTitle(response.title)
       // setScope(response.scope)
       // setRequirements(response.requirements)
-      sequentialChain.call({ topic: prompt }).then((response)=>{
-      console.log({ response })
-      setTitle(response.title)
-      setScope(response.scope)
-      setRequirements(response.requirements)
-      })
+      const response = await sequentialChain.call({ topic: prompt });
+      console.log({ response });
+      setTitle(response.title);
+      setScope(response.scope);
+      setRequirements(response.requirements);
+
     } catch (err) {
-      console.error("handleSubmit",error)
+      console.error("handleSubmit", error);
       setError("An error occurred");
     }
   };
