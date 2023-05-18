@@ -2,13 +2,32 @@ import axios from "axios";
 import { LLMChain, OpenAI, PromptTemplate } from "langchain";
 import { SequentialChain } from "langchain/chains";
 import React, { useEffect, useState } from "react";
+import styled from "styled-components";
 import { API_KEY } from "./apikey";
 
+const CodeBlock = styled.pre`
+  background-color: #f5f5f5;
+  padding: 1rem;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+`;
+
+const Code = styled.code`
+  color: #333;
+`;
 const DevOptimizer: React.FC = () => {
   const [commitFrequency, setCommitFrequency] = useState<number>(0);
   const [codeQuality, setCodeQuality] = useState<string>("");
+  const [code, setCode] = useState<string>("");
+  const [codeQualityMeas, setCodeQualityMeas] = useState<string>("");
+  const [pullReq, setPullReq] = useState<number>(0);
+  const [issueFixed, setIssueFixed] = useState<number>(0);
+  const [featImp, setFeatImp] = useState<number>(0);
+  const [docCheck, setDocCheck] = useState<boolean>(false);
+  const [openSourceContribution, setOpenSourceContribution] = useState<number>(0);
+  const [codeReviews, setCodeReviews] = useState<number>(0)
 
-  const accessToken = "token";
+  const accessToken = "Your token";
 
   useEffect(() => {
     const username = "himanshudevrani96";
@@ -24,19 +43,38 @@ const DevOptimizer: React.FC = () => {
             },
           }
         );
-
         const commits = response.data;
         const frequency: any = calculateCommitFrequency(commits, 30);
         setCommitFrequency(frequency);
-
         const latestCommit = commits[0];
         console.log({ latestCommit });
-
         const code = await fetchCodeFromCommit(latestCommit.sha, fileExtension);
         console.log({ code });
-
+        setCode(code)
         const codeQuality = await analyzeCodeQuality(API_KEY, code);
         setCodeQuality(codeQuality);
+        const codeQualityHighLow = analyzeCodeQualityHighLow(commits)
+        console.log({codeQualityHighLow});
+        setCodeQualityMeas(codeQualityHighLow)
+        const pullreq = calculatePullRequestReviews(commits)
+        console.log({pullreq});
+        setPullReq(pullreq)
+        const issueFixed = calculateIssueResolution(commits)
+        console.log({issueFixed});
+        setIssueFixed(issueFixed)
+        const featureImpl = calculateFeatureImplementation(commits)
+        console.log({featureImpl});
+        setFeatImp(featureImpl)
+        const checkDoc = checkDocumentation(commits)
+        console.log({checkDoc});
+        setDocCheck(checkDoc)
+        const openSourceCont  = calculateOpenSourceContributions(commits)
+        console.log({openSourceCont});
+        setOpenSourceContribution(openSourceCont)
+        const codeReviews = calculateCodeReviews(commits)
+        console.log({codeReviews});
+        setCodeReviews(codeReviews)
+        
       } catch (error: any) {
         console.error("An error occurred:", error.message);
       }
@@ -149,7 +187,7 @@ const DevOptimizer: React.FC = () => {
     fetchCommits();
   }, []);
 
-  const analyzeCodeQuality = (commits: any[]): string => {
+  const analyzeCodeQualityHighLow = (commits: any[]): string => {
     // Perform code quality analysis based on commits
     // You can implement your own code quality analysis logic here
     // For example, you can analyze code complexity, adherence to best practices, or code style consistency
@@ -268,12 +306,22 @@ const DevOptimizer: React.FC = () => {
     return codeReviewCount;
   };
   
-  
+
 
   return (
     <div>
       <h2>Commit Frequency (last 30 days): {commitFrequency}</h2>
-      <h2>Code Quality: {codeQuality}</h2>
+      <h2>Code Quality (GPT): <p>{codeQuality}</p></h2>
+      <CodeBlock> Actual Code:
+      <Code>{code}</Code>
+    </CodeBlock>
+      <h2>No of Features implemented: <p>{featImp}</p></h2>
+      <h2>Code Quality: <p>{codeQualityMeas}</p></h2>
+      <h2>No of PullReq: <p>{pullReq}</p></h2>
+      <h2>No of issues resolved: <p>{issueFixed}</p></h2>
+      <h2>Document Available: <p>{docCheck}</p></h2>
+      <h2>No of OpenSource Contributions: <p>{openSourceContribution}</p></h2>
+      <h2>No of code reviews done: <p>{codeReviews}</p></h2>
     </div>
   );
 };

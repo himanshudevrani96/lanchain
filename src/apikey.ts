@@ -1,1 +1,1 @@
-export const API_KEY = "sk-YOUR KEY"
+export const API_KEY = "sk-Key"
