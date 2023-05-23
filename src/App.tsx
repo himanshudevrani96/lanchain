@@ -6,7 +6,7 @@ import RFP from "./RFP";
 import RFPTemplate from "./RFPTemplate";
 
 function App() {
-  return <GitHubSignIn />;
+  return <DevOptimizer />;
 }
 
 export default App;
