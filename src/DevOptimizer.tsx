@@ -1,16 +1,18 @@
 import axios from "axios";
+import { log } from "console";
 import { LLMChain, OpenAI, PromptTemplate } from "langchain";
 import { SequentialChain } from "langchain/chains";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { API_KEY } from "./apikey";
 import CodeSnippet from "./CodeSnippet";
+import EfficiencyGraph from "./EfficiencyGraph";
 
 const CodeBlock = styled.pre`
   background-color: #f5f5f5;
   padding: 1rem;
   border-radius: 4px;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: "Courier New", Courier, monospace;
 `;
 
 const Code = styled.code`
@@ -25,10 +27,12 @@ const DevOptimizer: React.FC = () => {
   const [issueFixed, setIssueFixed] = useState<number>(0);
   const [featImp, setFeatImp] = useState<number>(0);
   const [docCheck, setDocCheck] = useState<boolean>(false);
-  const [openSourceContribution, setOpenSourceContribution] = useState<number>(0);
-  const [codeReviews, setCodeReviews] = useState<number>(0)
-
-  const accessToken = "KEY";
+  const [openSourceContribution, setOpenSourceContribution] =
+    useState<number>(0);
+  const [codeReviews, setCodeReviews] = useState<number>(0);
+  const [efficiency, setDevEfficiency] = useState<any>("");
+  const [chartData, setChartData] = useState<any>({});
+  const accessToken = "accesstokem";
   const devEfficiencyTemplate = `
   Evaluate the efficiency of a developer based on the following metrics:
 
@@ -57,8 +61,13 @@ const DevOptimizer: React.FC = () => {
      - The developer's engagement in code reviews.
   
   Based on these metrics, please assess the efficiency of the developer and provide a summary of their performance.
-  
-  `
+  `;
+
+  useEffect(() => {
+    if (codeQuality) {
+      evaluateDeveloperEfficiency();
+    }
+  }, [codeQuality]);
   useEffect(() => {
     const username = "himanshudevrani96";
     const repo = "langchain";
@@ -80,31 +89,30 @@ const DevOptimizer: React.FC = () => {
         console.log({ latestCommit });
         const code = await fetchCodeFromCommit(latestCommit.sha, fileExtension);
         console.log({ code });
-        setCode(code)
+        setCode(code);
         const codeQuality = await analyzeCodeQuality(API_KEY, code);
         setCodeQuality(codeQuality);
-        const codeQualityHighLow = analyzeCodeQualityHighLow(commits)
-        console.log({codeQualityHighLow});
-        setCodeQualityMeas(codeQualityHighLow)
-        const pullreq = calculatePullRequestReviews(commits)
-        console.log({pullreq});
-        setPullReq(pullreq)
-        const issueFixed = calculateIssueResolution(commits)
-        console.log({issueFixed});
-        setIssueFixed(issueFixed)
-        const featureImpl = calculateFeatureImplementation(commits)
-        console.log({featureImpl});
-        setFeatImp(featureImpl)
-        const checkDoc = checkDocumentation(commits)
-        console.log({checkDoc});
-        setDocCheck(checkDoc)
-        const openSourceCont  = calculateOpenSourceContributions(commits)
-        console.log({openSourceCont});
-        setOpenSourceContribution(openSourceCont)
-        const codeReviews = calculateCodeReviews(commits)
-        console.log({codeReviews});
-        setCodeReviews(codeReviews)
-        
+        const codeQualityHighLow = analyzeCodeQualityHighLow(commits);
+        console.log({ codeQualityHighLow });
+        setCodeQualityMeas(codeQualityHighLow);
+        const pullreq = calculatePullRequestReviews(commits);
+        console.log({ pullreq });
+        setPullReq(pullreq);
+        const issueFixed = calculateIssueResolution(commits);
+        console.log({ issueFixed });
+        setIssueFixed(issueFixed);
+        const featureImpl = calculateFeatureImplementation(commits);
+        console.log({ featureImpl });
+        setFeatImp(featureImpl);
+        const checkDoc = checkDocumentation(commits);
+        console.log({ checkDoc });
+        setDocCheck(checkDoc);
+        const openSourceCont = calculateOpenSourceContributions(commits);
+        console.log({ openSourceCont });
+        setOpenSourceContribution(openSourceCont);
+        const codeReviews = calculateCodeReviews(commits);
+        console.log({ codeReviews });
+        setCodeReviews(codeReviews);
       } catch (error: any) {
         console.error("An error occurred:", error.message);
       }
@@ -183,10 +191,19 @@ const DevOptimizer: React.FC = () => {
           inputVariables: ["code"],
           template: "Evaluate the code quality:\n```\n${code}\n```",
         });
-        const devEffTemp = new PromptTemplate({
-          inputVariables: ["commitFrequency",  "code", "pullReqests", "issueFixed",  "feature Implemented",  "is document", "openSourceContribution", "codeReviews"],
-          template: devEfficiencyTemplate
-        })
+        // const devEffTemp = new PromptTemplate({
+        //   inputVariables: [
+        //     "commitFrequency",
+        //     "code",
+        //     "pullReqests",
+        //     "issueFixed",
+        //     "feature Implemented",
+        //     "is document",
+        //     "openSourceContribution",
+        //     "codeReviews",
+        //   ],
+        //   template: devEfficiencyTemplate,
+        // });
         const codeChain = new LLMChain({
           llm,
           prompt: template,
@@ -226,20 +243,20 @@ const DevOptimizer: React.FC = () => {
     // You can implement your own code quality analysis logic here
     // For example, you can analyze code complexity, adherence to best practices, or code style consistency
     // Return a code quality assessment or rating
-  
+
     // Custom code quality analysis logic
     const totalCommits = commits.length;
-    const codeQualityRating = totalCommits > 100 ? 'High' : 'Low';
-  
+    const codeQualityRating = totalCommits > 100 ? "High" : "Low";
+
     return codeQualityRating;
   };
-  
+
   const calculatePullRequestReviews = (commits: any[]): number => {
     // Perform calculation for pull request reviews based on commits
     // You can analyze the number of pull request reviews made by the developer
     // For example, you can count the number of pull request events related to the developer's commits
     // Return the number of pull request reviews
-  
+
     // Custom calculation for pull request reviews
     let pullRequestReviews = 0;
     commits.forEach((commit: any) => {
@@ -248,16 +265,16 @@ const DevOptimizer: React.FC = () => {
         pullRequestReviews += pullRequests.length;
       }
     });
-  
+
     return pullRequestReviews;
   };
-  
+
   const calculateIssueResolution = (commits: any[]): number => {
     // Perform calculation for issue resolution based on commits
     // You can analyze the number of issues closed by the developer
     // For example, you can count the number of issue events related to the developer's commits
     // Return the number of issue resolutions
-  
+
     // Custom calculation for issue resolution
     let issueResolutionCount = 0;
     commits.forEach((commit: any) => {
@@ -266,7 +283,7 @@ const DevOptimizer: React.FC = () => {
         issueResolutionCount += issuesClosed.length;
       }
     });
-  
+
     return issueResolutionCount;
   };
 
@@ -275,41 +292,46 @@ const DevOptimizer: React.FC = () => {
     // You can analyze the number of features implemented by the developer
     // For example, you can count the number of commits that reference a feature or user story
     // Return the number of feature implementations
-  
+
     // Custom calculation for feature implementation
     let featureImplementationCount = 0;
     commits.forEach((commit: any) => {
       // Check if commit message references a feature or user story
-      if (commit.message.includes('feature') || commit.message.includes('user story')) {
+      if (
+        commit &&
+        commit?.message &&
+        (commit?.message?.includes("feature") ||
+          commit?.message?.includes("user story"))
+      ) {
         featureImplementationCount++;
       }
     });
-  
+
     return featureImplementationCount;
   };
-  
+
   const checkDocumentation = (commits: any[]): boolean => {
     // Check if the developer has made documentation-related commits
     // You can analyze the commit messages or specific files related to documentation
     // Return true if documentation commits are found, otherwise false
-  
+
     // Custom logic to check documentation commits
     const documentationCommits = commits.filter((commit: any) => {
       // Check if commit message or file paths indicate documentation changes
       return (
-        commit.message.includes('docs') || // Commit message includes 'docs'
-        commit.files.some((file: any) => file.path.includes('docs')) // Files include 'docs' in their paths
+        commit?.message?.includes("docs") || // Commit message includes 'docs'
+        commit?.files?.some((file: any) => file?.path?.includes("docs")) // Files include 'docs' in their paths
       );
     });
-  
+
     return documentationCommits.length > 0;
   };
-  
+
   const calculateOpenSourceContributions = (commits: any[]): number => {
     // Perform calculation for open-source contributions based on commits
     // You can analyze the number of commits made to open-source projects
     // Return the number of open-source contributions
-  
+
     // Custom calculation for open-source contributions
     let openSourceContributionCount = 0;
     commits.forEach((commit: any) => {
@@ -318,42 +340,158 @@ const DevOptimizer: React.FC = () => {
         openSourceContributionCount++;
       }
     });
-  
+
     return openSourceContributionCount;
   };
-  
+
   const calculateCodeReviews = (commits: any[]): number => {
     // Perform calculation for code reviews based on commits
     // You can analyze the number of code reviews conducted by the developer
     // For example, you can count the number of code review-related comments in commit messages
     // Return the number of code reviews
-  
+
     // Custom calculation for code reviews
     let codeReviewCount = 0;
     commits.forEach((commit: any) => {
       // Check if commit message indicates a code review
-      if (commit.message.includes('code review')) {
+      if (commit?.message?.includes("code review")) {
         codeReviewCount++;
       }
     });
-  
+
     return codeReviewCount;
   };
-  
 
+  const evaluateDeveloperEfficiency = async () => {
+    const prompt = `Evaluate Developer Efficiency\n\nGiven the following data for a developer:\n\n- Commit frequency: ${commitFrequency}\n- Code quality: ${codeQuality}\n- Pull requests: ${pullReq}\n- Issue resolution: ${issueFixed}\n- Feature implementation: ${featImp}\n- Documentation: ${
+      docCheck ? "Provided" : "Not provided"
+    }\n- Open source contributions: ${openSourceContribution}\n- Code reviews: ${codeReviews}\n\nUsing LangChain, analyze the provided data and generate a report on the developer's efficiency. Consider factors such as their commit frequency, code quality, contribution to open source, and their ability to resolve issues and implement new features. Identify their strengths, weaknesses, and areas for improvement. Provide an overall efficiency score or rating based on the analysis.\n\nReturn the efficiency report for the developer, including the overall efficiency score, strengths, weaknesses, and areas for improvement.`;
+    const template = new PromptTemplate({
+      inputVariables: [
+        "commitFrequency",
+        "codeQuality",
+        "pullReq",
+        "issueFixed",
+        "featImp",
+        "docCheck",
+        "openSourceContribution",
+        "codeReviews",
+      ],
+      template: prompt,
+    });
+    const llm = new OpenAI({ openAIApiKey: API_KEY, temperature: 0.9 });
+    const codeChain = new LLMChain({
+      llm,
+      prompt: template,
+      outputKey: "efficiency",
+    });
+    const sequentialChain = new SequentialChain({
+      chains: [codeChain],
+      inputVariables: [
+        "commitFrequency",
+        "codeQuality",
+        "pullReq",
+        "issueFixed",
+        "featImp",
+        "docCheck",
+        "openSourceContribution",
+        "codeReviews",
+      ],
+      outputVariables: ["efficiency"],
+    });
+    const response = await sequentialChain.call({
+      commitFrequency: commitFrequency,
+      codeQuality: codeQuality,
+      pullReq: pullReq,
+      issueFixed: issueFixed,
+      featImp: featImp,
+      docCheck: docCheck,
+      openSourceContribution: openSourceContribution,
+      codeReviews: codeReviews,
+    });
+    // const response = await openai.complete({
+    //   engine: 'text-davinci-003',
+    //   prompt,
+    //   maxTokens: 100,
+    //   temperature: 0.6,
+    //   n: 1,
+    //   stop: '\n',
+    // });
+
+    const report = response.efficiency;
+    setDevEfficiency(report);
+    const efficiencyRegex = /Overall Efficiency: (\d+)/;
+    const strengthsRegex = /Strengths:\n([\s\S]*?)\n\nWeaknesses:/;
+    const weaknessesRegex = /Weaknesses:\n([\s\S]*?)\n\nAreas for Improvement:/;
+    const areasForImprovementRegex = /Areas for Improvement:\n([\s\S]*)/;
+
+    const overallEfficiencyMatch = report.match(efficiencyRegex);
+    const strengthsMatch = report.match(strengthsRegex);
+    const weaknessesMatch = report.match(weaknessesRegex);
+    const areasForImprovementMatch = report.match(areasForImprovementRegex);
+
+    const overallEfficiency = overallEfficiencyMatch
+      ? parseInt(overallEfficiencyMatch[1])
+      : 0;
+    const strengths = strengthsMatch
+      ? strengthsMatch[1].trim().split("\n")
+      : [];
+    const weaknesses = weaknessesMatch
+      ? weaknessesMatch[1].trim().split("\n")
+      : [];
+    const areasForImprovement = areasForImprovementMatch
+      ? areasForImprovementMatch[1].trim().split("\n")
+      : [];
+    console.log({
+      overallEfficiency,
+      strengths,
+      weaknesses,
+      areasForImprovement,
+    });
+    setChartData({
+      overallEfficiency,
+      strengths,
+      weaknesses,
+      areasForImprovement,
+    });
+  };
+  //  overallEfficiency: number;
+  // strengths: string[];
+  // weaknesses: string[];
+  // areasForImprovement: string[];
 
   return (
     <div>
       <h2>Commit Frequency (last 30 days): {commitFrequency}</h2>
-      <h2>Code Quality (GPT): <p>{codeQuality}</p></h2>
-     <CodeSnippet code={code}/>
-      <h2>No of Features implemented: <p>{featImp}</p></h2>
-      <h2>Code Quality: <p>{codeQualityMeas}</p></h2>
-      <h2>No of PullReq: <p>{pullReq}</p></h2>
-      <h2>No of issues resolved: <p>{issueFixed}</p></h2>
-      <h2>Document Available: <p>{docCheck}</p></h2>
-      <h2>No of OpenSource Contributions: <p>{openSourceContribution}</p></h2>
-      <h2>No of code reviews done: <p>{codeReviews}</p></h2>
+      <h2>
+        Code Quality (GPT): <p>{codeQuality}</p>
+      </h2>
+      <CodeSnippet code={code} />
+      <h2>
+        No of Features implemented: <p>{featImp}</p>
+      </h2>
+      <h2>
+        Code Quality: <p>{codeQualityMeas}</p>
+      </h2>
+      <h2>
+        No of PullReq: <p>{pullReq}</p>
+      </h2>
+      <h2>
+        No of issues resolved: <p>{issueFixed}</p>
+      </h2>
+      <h2>
+        Document Available: <p>{docCheck}</p>
+      </h2>
+      <h2>
+        No of OpenSource Contributions: <p>{openSourceContribution}</p>
+      </h2>
+      <h2>
+        No of code reviews done: <p>{codeReviews}</p>
+      </h2>
+      <h1 style={{ color: "green" }}> {efficiency}</h1>
+      {Object.keys(chartData).length && (
+        <EfficiencyGraph efficiencyData={chartData} />
+      )}
     </div>
   );
 };
