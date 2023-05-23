@@ -4,6 +4,7 @@ import { SequentialChain } from "langchain/chains";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { API_KEY } from "./apikey";
+import CodeSnippet from "./CodeSnippet";
 
 const CodeBlock = styled.pre`
   background-color: #f5f5f5;
@@ -27,8 +28,37 @@ const DevOptimizer: React.FC = () => {
   const [openSourceContribution, setOpenSourceContribution] = useState<number>(0);
   const [codeReviews, setCodeReviews] = useState<number>(0)
 
-  const accessToken = "Your token";
+  const accessToken = "KEY";
+  const devEfficiencyTemplate = `
+  Evaluate the efficiency of a developer based on the following metrics:
 
+  1. Commit Frequency: [commitFrequency]
+     - The number of commits made by the developer in a given time period.
+  
+  2. Code Quality:
+     - Code snippet: [code]
+  
+  3. Pull Requests: [noOfPullRequests]
+     - The number of pull requests submitted by the developer.
+  
+  4. Issue Resolution: [noOfIssuesFixed]
+     - The number of issues or bugs fixed by the developer.
+  
+  5. Feature Implementation: [noOfFeaturesImplemented]
+     - The number of features implemented by the developer.
+  
+  6. Documentation: [isDocumentationProvided]
+     - Boolean value indicating if the developer provides proper documentation.
+  
+  7. Open Source Contributions: [openSourceContributions]
+     - The developer's contributions to open-source projects.
+  
+  8. Code Reviews: [codeReviews]
+     - The developer's engagement in code reviews.
+  
+  Based on these metrics, please assess the efficiency of the developer and provide a summary of their performance.
+  
+  `
   useEffect(() => {
     const username = "himanshudevrani96";
     const repo = "langchain";
@@ -130,7 +160,7 @@ const DevOptimizer: React.FC = () => {
         if (codeFile) {
           const codeResponse = await axios.get(codeFile.url);
           const codeContent = atob(codeResponse.data.content);
-          console.log(codeContent);
+          console.log(codeContent, typeof codeContent);
 
           return codeContent;
         } else {
@@ -153,6 +183,10 @@ const DevOptimizer: React.FC = () => {
           inputVariables: ["code"],
           template: "Evaluate the code quality:\n```\n${code}\n```",
         });
+        const devEffTemp = new PromptTemplate({
+          inputVariables: ["commitFrequency",  "code", "pullReqests", "issueFixed",  "feature Implemented",  "is document", "openSourceContribution", "codeReviews"],
+          template: devEfficiencyTemplate
+        })
         const codeChain = new LLMChain({
           llm,
           prompt: template,
@@ -312,9 +346,7 @@ const DevOptimizer: React.FC = () => {
     <div>
       <h2>Commit Frequency (last 30 days): {commitFrequency}</h2>
       <h2>Code Quality (GPT): <p>{codeQuality}</p></h2>
-      <CodeBlock> Actual Code:
-      <Code>{code}</Code>
-    </CodeBlock>
+     <CodeSnippet code={code}/>
       <h2>No of Features implemented: <p>{featImp}</p></h2>
       <h2>Code Quality: <p>{codeQualityMeas}</p></h2>
       <h2>No of PullReq: <p>{pullReq}</p></h2>
